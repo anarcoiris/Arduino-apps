@@ -1,0 +1,6 @@
+Time Plotter is a code that takes 10 measurements of the requested vs real elapsed time for the microsecondDelay function in 500us increments up to 50000us.
+I have found this to be helpful to test device capabilities. I guess this depends on the MCU clock frequency, but I still don't have answers to all the questions 
+that arise from running this code. It has been a bit painful to achieve requested delays for precision requiring apps, so maybe it can save others some time.
+Noticed the time was somehow 2.58 shorter (10250 us instead of 26500us requested). Going linearly for 68500 wasnt a solution, but half the time worked fine.
+So after finnishing with the stepper control app, I decided to take a deeper look. And yeah, it is very revealing: Now you can know the limits of your device
+(if any)
