@@ -1,0 +1,403 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Observatorio astron�mico</title>
+<link rel="stylesheet" href="estilos.css">
+  <style>
+    body {
+      background-image: url('/background.jpeg');
+      background-size: cover;
+      background-attachment: fixed;
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-position: center center;
+      background-color: #eee;
+    }
+    .theme-button {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin: 10px;
+      border: 2px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Define el estilo para el bot�n de modo claro */
+    #light-mode {
+      background-color: #E6E6FA;
+    }
+
+    /* Define el estilo para el bot�n de modo oscuro */
+    #dark-mode {
+      background-color: #800080;
+      color: white;
+    }
+    h1 {
+      font-family: 'Helvetica Neue', sans-serif;
+      font-size: 36px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 350px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 25px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    .button-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 16px;
+      margin: 0 10px;
+      border: none;
+      background-color: #333;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .micro-seconds {
+      text-align: center;
+      font-size: 24px;
+      margin-top: 20px;
+    }
+    @media screen and (max-width: 600px) {
+      .container {
+        max-width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      button {
+        margin: 0 5px;
+        font-size: 14px;
+      }
+    }
+      .circle {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 70%;
+        background-color: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .o {
+        position: absolute;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background-color: red;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 8px;
+        font-weight: bold;
+        transform-origin: center center;
+      }
+  </style>
+</head>
+<body>
+  <button id="light-mode" class="theme-button"></button>
+  <button id="dark-mode" class="theme-button"></button>
+
+  <h1>Observatorio astronomico</h1>
+  <div class="container">
+    <div class="button-container">
+	<p>Seguimiento: <span id="estado"></span></p>
+      <button onclick="sendData('start')">Iniciar</button>
+      <button onclick="sendData('stop')">Parar</button>
+    </div>
+    <div class="micro-seconds">
+      <p>Tiempo de exposición: <span id="currentExpTime"></span></p>
+      <button onclick="sendData('tmas')" style="font-size:24px">&#8679;</button>
+      <button onclick="sendData('tmenos')" style="font-size:24px">&#8681;</button>
+      <p>Fotos a realizar: <span id="currentPhoto"></span></p>
+      <button onclick="sendData('pmas')" style="font-size:24px">&#8679;</button>
+      <button onclick="sendData('pmenos')" style="font-size:24px">&#8681;</button>
+      <button onclick="sendData('shot')">Disparar!</button>
+      <p>Valor actual en microsegundos: <span id="currentMicros"></span></p>
+      <button onclick="sendData('arriba')" style="font-size:24px">&#8679;</button>
+      <button onclick="sendData('abajo')" style="font-size:24px">&#8681;</button>
+	<button onclick="updateAng()">Actualizar datos</button>
+      <button onclick="sendData('mas')">+</button>
+      <button onclick="sendData('menos')">-</button>
+      <p>Hemisferio actual: <span
+id="hemisferio"></span></p>
+      <button onclick="sendData('norte')">Norte</button>
+      <button onclick="sendData('sur')">Sur</button>
+      <form id="FormPausa">
+  		<label for="microPausa">MicroPausa:</label>
+  		<input type="number" id="microPausa" name="microPausa" value="26250">
+  	<button type="button" onclick="sendMicroPausa()">Enviar</button>
+    </form>
+      <form id="FormFoto">
+      <label for="totalPhoto">Fotos:</label>
+      <input type="number" id="totalPhoto" name="totalPhoto" value="150">
+    <button type="button" onclick="sendTotalPhoto()">Enviar</button>
+    </form>
+<div class="circle">
+		<div class="o"></div>
+	</div>
+	<p> Reloj polar </p>
+	<button onclick="refreshAngle()">Actualizar Angulo</button>
+	<div id="estado-indicators">
+  	<svg id="estado-svg" width="100%" height="400">
+    	<!-- Rect�ngulos para los indicadores de estado -->
+   	 <rect x="25%" y="30" width="25" height="25" fill="#f00" stroke="#000" stroke-width="2" />
+   	 <rect x="50%" y="30" width="25" height="25" fill="#0f0" stroke="#000" stroke-width="2" />
+  	  <rect x="75%" y="30" width="25" height="25" fill="#00f" stroke="#000" stroke-width="2" />
+  </svg>
+</div>
+
+
+    </div>
+  </div>
+
+
+
+  <!-- L�neas para los controles de direcci�n -->
+  <line x1="100" y1="300" x2="200" y2="200" stroke="#000" stroke-width="4" />
+  <line x1="300" y1="300" x2="200" y2="200" stroke="#000" stroke-width="4" />
+  <line x1="200" y1="200" x2="200" y2="100" stroke="#000" stroke-width="4" />
+  <line x1="200" y1="200" x2="100" y2="200" stroke="#000" stroke-width="4" />
+  <line x1="200" y1="200" x2="300" y2="200" stroke="#000" stroke-width="4" />
+
+  <!-- C�rculo para el bot�n de inicio/parada -->
+  <circle cx="200" cy="300" r="50" fill="#333" stroke="#000" stroke-width="2" />
+
+  <!-- Agregar texto para los indicadores y botones -->
+  <text x="60%" y="65" font-size="20">Estado 1</text>
+  <text x="60%" y="125" font-size="20">Estado 2</text>
+  <text x="60%" y="185" font-size="20">Estado 3</text>
+  <text x="170" y="290" font-size="20" fill="#fff">Inicio</text>
+</svg>
+
+  <script>
+    var updateNeeded = false;
+		let angle = getAngle();
+		let circle = document.querySelector('.circle');
+		let o = document.querySelector('.o');
+
+		//setInterval(() => {
+		//	angle = getAngle();
+		//	o.style.transform = `rotate(${angle}rad) translateX(30px) rotate(${-angle}rad)`;
+		//}, 1000);
+
+		function getAngle() {
+			let date = new Date();
+			let hour = date.getUTCHours() + date.getUTCMinutes() / 60;
+			let angle = -(hour / 24 * 2 * Math.PI - Math.PI/2);
+			return angle;
+		}
+
+		function refreshAngle() {
+			angle = getAngle();
+			o.style.transform = `rotate(${angle}rad) translateX(30px) rotate(${-angle}rad)`;
+		}
+
+ function sendData(move) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/move?move=" + move, true);
+      xhr.send();
+  // Set updateNeeded to true after sending the request
+  updateNeeded = true;
+
+    }
+		function updateAng() {
+			updateNeeded = true;
+		}
+function sendMicroPausa() {
+  // Get the value of the microPausa input field
+  var value = document.getElementById("microPausa").value;
+
+  // Send the value to the Arduino using the GET method
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/setMicroPausa?microPausa=" + value);
+  xhr.send();
+
+  // Set updateNeeded to true after sending the request
+  updateNeeded = true;
+}
+function sendTotalPhoto() {
+  // Get the value of the microPausa input field
+  var value = document.getElementById("totalPhoto").value;
+
+  // Send the value to the Arduino using the GET method
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/setTotalPhoto?totalPhoto=" + value);
+  xhr.send();
+
+  // Set updateNeeded to true after sending the request
+  updateNeeded = true;
+}
+function updateExpTimeValue(value) {
+  document.getElementById('currentExpTime').innerHTML = value;
+}
+function updateMicrosecondsValue(value) {
+  document.getElementById('currentMicros').innerHTML = value;
+}
+function updateTotalPhotoValue(value) {
+  document.getElementById('currentPhoto').innerHTML = value;
+  //document.getElementById('currentPhotoCount').innerHTML = value;
+  //document.getElementById('remainingPhoto').innerHTML = value;
+}
+
+function getCurrentMicroseconds() {
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        updateMicrosecondsValue(xhr.responseText);
+
+        // Set updateNeeded to false after completing the update
+        updateNeeded = false;
+      }
+    }
+  }
+  xhr.open('GET', '/currentMicros', true);
+  xhr.send();
+}
+function getTotalPhoto() {
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        updateTotalPhotoValue(xhr.responseText);
+
+        // Set updateNeeded to false after completing the update
+        updateNeeded = false;
+      }
+    }
+  }
+  xhr.open('GET', '/currentPhoto', true);
+  xhr.send();
+}
+
+function getCurrentExpTime() {
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        updateExpTimeValue(xhr.responseText);
+
+        // Set updateNeeded to false after completing the update
+        updateNeeded = false;
+      }
+    }
+  }
+  xhr.open('GET', '/currentExpTime', true);
+  xhr.send();
+}
+
+function updateHemisferioValue(value) {
+  document.getElementById('hemisferio').innerHTML = value;
+}
+
+function getHemisferio() {
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        updateHemisferioValue(xhr.responseText);
+
+        // Set updateNeeded to false after completing the update
+        updateNeeded = false;
+      }
+    }
+  }
+  xhr.open('GET', '/hemisferio', true);
+  xhr.send();
+}
+
+function updateEstadoValue(value) {
+  var estadoElement = document.getElementById('estado');
+  estadoElement.innerHTML = value;
+
+  var svgElement = document.getElementById('estado-svg');
+  if (value === 'Encendido') {
+    svgElement.querySelector('rect:nth-of-type(2)').setAttribute('fill', 'yellow');
+  } else if (value === 'Apagado') {
+    svgElement.querySelector('rect:nth-of-type(1)').setAttribute('fill', 'white');
+  } else {
+    svgElement.querySelector('rect:nth-of-type(3)').setAttribute('fill', 'purple');
+  }
+}
+
+function getEstado() {
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        updateEstadoValue(xhr.responseText);
+
+        // Set updateNeeded to false after completing the update
+        updateNeeded = false;
+      }
+    }
+  }
+  xhr.open('GET', '/estado', true);
+  xhr.send();
+}
+
+// Call functions to update information when updateNeeded is true
+setInterval(function() {
+  if (updateNeeded) {
+    getCurrentMicroseconds();
+    getCurrentExpTime();
+    getHemisferio();
+    getEstado();
+    getTotalPhoto();
+    angle = getAngle();
+	o.style.transform = `rotate(${angle}rad) translateX(30px) rotate(${-angle}rad)`;
+  }
+}, 500);
+    // Obtiene los botones por su id
+    var lightButton = document.getElementById("light-mode");
+    var darkButton = document.getElementById("dark-mode");
+
+// accion claro
+lightButton.onclick = function() {
+  // Cambia el color de fondo de la p�gina y los estilos de los botones para el modo claro
+  document.body.style.backgroundColor = "#ADD8E6";
+  document.querySelector('.container').style.backgroundColor = "#ADD8E6";
+  lightButton.style.color = "#F5F5DC";
+  lightButton.style.backgroundColor = "#A9A9A9";
+  darkButton.style.color = "#000080";
+  darkButton.style.backgroundColor = "black";
+document.body.style.color = "black";
+document.body.style.fontWeight = "bold";
+  document.querySelector('.container').style.color = "black";
+}
+
+// accion oscuro
+darkButton.onclick = function() {
+  // Cambia el color de fondo de la p�gina y los estilos de los botones para el modo oscuro
+  document.body.style.backgroundColor = "#191970";
+  document.querySelector('.container').style.backgroundColor = "#191970";
+  lightButton.style.color = "#F5F5DC";
+  lightButton.style.backgroundColor = "#A9A9A9";
+  darkButton.style.color = "#000080";
+  darkButton.style.backgroundColor = "#8B0000";
+document.body.style.color = "white";
+document.body.style.fontWeight = "bold";
+  document.querySelector('.container').style.color = "white";
+  document.querySelector('.container').style.fontWeight = "bold";
+}
+
+  </script>
+</body>
+</html>
